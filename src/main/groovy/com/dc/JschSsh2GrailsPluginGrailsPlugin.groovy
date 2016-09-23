@@ -17,8 +17,8 @@ class JschSsh2GrailsPluginGrailsPlugin extends Plugin {
 
     // TODO Fill in these fields
     def title = "Jsch Ssh2 Grails Plugin" // Headline display name of the plugin
-    def author = "Your name"
-    def authorEmail = ""
+    def author = "Brian Doyle"
+    def authorEmail = "doylecentral@gmail.com"
     def description = '''\
 Brief summary/description of the plugin.
 '''
@@ -44,29 +44,26 @@ Brief summary/description of the plugin.
     // Online location of the plugin's browseable source code.
 //    def scm = [ url: "http://svn.codehaus.org/grails-plugins/" ]
 
-    Closure doWithSpring() { {->
-            // TODO Implement runtime spring config (optional)
-            //DOyle look here put the resourse
-        //    grailsApplication.config
-        connectionInfo(jschssh.ConnectionInfo){
-            username = "root"
-            password = null
-            keyFile = null
-            keyFilePassword = null
-            port = 22
-            strictHostKeyChecking = "no"
-            knownHostsFile = "~/.ssh/known_hosts"
-            sshConfigFile = "~/.ssh/config"
-            connectionTimeout = 0
-            preserveTimeStamps = false
-            // Normal File Read + Write for user,
-            // Read for group and Everyone
-            defaultFilePermission = "0644"
+    Closure doWithSpring() {
+        { ->
+            runSshCommand(RunSshCommand, ref('connectionInfo'))
+
+            connectionInfo(jschssh.ConnectionInfo) {
+                username = grailsApplication.config.username
+                password = grailsApplication.config.password
+                keyFile = grailsApplication.config.keyFile
+                keyFilePassword = grailsApplication.config.keyFilePassword
+                port = grailsApplication.config.sshport
+                strictHostKeyChecking = grailsApplication.config.strictHostKeyChecking
+                knownHostsFile = grailsApplication.config.knownHostsFile
+                sshConfigFile = grailsApplication.config.sshConfigFile
+                connectionTimeout = grailsApplication.config.connectionTimeout
+                // Normal File Read + Write for user,
+                // Read for group and Everyone
+                defaultFilePermission = grailsApplication.config.defaultFilePermission
+            }
+
         }
-
-        runSshCommand(RunSshCommand, ref('connectionInfo'))
-
-    }
     }
 
     void doWithDynamicMethods() {

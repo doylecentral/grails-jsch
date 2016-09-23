@@ -1,9 +1,12 @@
 package jschssh
 
 import com.jcraft.jsch.ChannelExec
+import com.jcraft.jsch.ConfigRepository
+import com.jcraft.jsch.JSch
 import com.jcraft.jsch.JSchException
 import com.jcraft.jsch.Session
 import org.apache.log4j.Logger
+import org.springframework.beans.factory.annotation.Autowired
 
 import javax.annotation.Resource
 
@@ -18,6 +21,7 @@ import javax.annotation.Resource
  * Time: 4:00 PM
  * Licenses: MIT http://opensource.org/licenses/MIT
  */
+
 class RunSshCommand{ // extends ConnectionInfo {
 
     /**
@@ -33,6 +37,7 @@ class RunSshCommand{ // extends ConnectionInfo {
 
 
     //@Resource(name="connectionInfo")
+    @Autowired
     public ConnectionInfo connectionInfo
 
     /**
@@ -138,5 +143,64 @@ class RunSshCommand{ // extends ConnectionInfo {
             }
         }
         return response
+    }
+
+    public Session fetchSession() throws JSchException {
+        try {
+            log.debug("Opening connection on remote server.")
+            JSch jSch = new JSch()
+            // session object used once connected
+            Session session
+
+            // if the hosts file variable has been set then attempt
+            // to load into JSch object.
+            if (connectionInfo.knownHostsFile) {
+                log.trace("Adding known hosts file to client.")
+                jSch.setKnownHosts(connectionInfo.knownHostsFile)
+            }
+
+            // If the config file is set attempt to load it
+            if (connectionInfo.sshConfigFile) {
+                log.trace("Loading ssh config file")
+                ConfigRepository configRepository = com.jcraft.jsch.OpenSSHConfig.parse(connectionInfo.sshConfigFile)
+                jSch.setConfigRepository(configRepository)
+            }
+
+            // If keyFile is set and password is not attempt to use the key to auth
+            if (connectionInfo.keyFile && !connectionInfo.password) {
+                log.trace("Attempting an ssh key auth.")
+                if (connectionInfo.keyFilePassword) {
+                    log.trace("Adding ${keyFile}, and keyFilePassword to identity.")
+                    jSch.addIdentity(connectionInfo.keyFile, connectionInfo.keyFilePassword)
+                }
+                else {
+                    log.trace("Adding ${connectionInfo.keyFile} to identity.")
+                    jSch.addIdentity(connectionInfo.keyFile)
+                }
+            }
+            log.trace("Opening session to remote host.")
+            session = jSch.getSession(connectionInfo.username, connectionInfo.host, connectionInfo.port)
+            // If the connectionTimeout is set use it instead of jsch default.
+            if (connectionInfo.connectionTimeout) {
+                session.timeout = connectionInfo.connectionTimeout
+            }
+
+            if (connectionInfo.password) {
+                // If this is not set maybe its a key auth?
+                session.setPassword(connectionInfo.password)
+            }
+
+//            session.setConfig("StrictHostKeyChecking","no")
+            session.setConfig("StrictHostKeyChecking", connectionInfo.strictHostKeyChecking)
+
+            // Connect to the server to run the command.
+            session.connect()
+            log.trace("connected to server.")
+            return session
+        }
+        catch (JSchException e) {
+            log.debug("Failed to create session to host.")
+            throw e
+        }
     }
 }

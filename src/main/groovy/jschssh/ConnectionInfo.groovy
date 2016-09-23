@@ -25,38 +25,26 @@ public class ConnectionInfo implements InitializingBean{
      */
     private Logger log = Logger.getLogger(ConnectionInfo)
 
-
-    /**
-     * Username from the config file.
-     *
-     */
-    String getUsername() {
-        return username
-    }
-
-    void setUsername(String username) {
-        this.username = username
-    }
-    private String username
+    String username
 
     /**
      * Password from the config file.
      *
      */
-    public String password //= config.password
+    String password //= config.password
 
     /**
      * Full path to the key file.
      * Tomcat user must have read access to this file.
      *
      */
-    public String keyFile //= config.keyFile
+    String keyFile //= config.keyFile
 
     /**
      * Password for the key file.
      *
      */
-    public String keyFilePassword //= config.keyFilePassword
+    String keyFilePassword //= config.keyFilePassword
 
     /**
      * This setting allows you to ignore hosts you have not accepted a key
@@ -64,26 +52,26 @@ public class ConnectionInfo implements InitializingBean{
      * in production. The default is yes. In development mode set to "no".
      *
      */
-    public String strictHostKeyChecking //= config.strictHostKeyChecking
+    String strictHostKeyChecking //= config.strictHostKeyChecking
 
     /**
      * The port the remote ssh server is listening on. Default is 22.
      */
-    public int port// = config.port
+    int port// = config.port
 
     /**
      * Full path to the ssh known hosts file. The tomcat user will need
      * read access to this file. The default is ~/.ssh/known_hosts
      *
      */
-    public String knownHostsFile //= config.knownHostsFile
+    String knownHostsFile //= config.knownHostsFile
 
     /**
      * Hostname of the remote host you wish to connect to.
      * This can be a hostname or an IP address.
      *
      */
-    public String host
+    String host
 
     /**
      * The full path to the ssh config file you wish to load.
@@ -107,80 +95,17 @@ public class ConnectionInfo implements InitializingBean{
      * This is to allow you to over ride settings while in
      * development mode.
      */
-    public String sshConfigFile //= config.sshConfigFile
+    String sshConfigFile //= config.sshConfigFile
 
     /**
      * Connection timeout for connecting to a remote host.
      */
-    public int connectionTimeout //= config.connectionTimeout
-
+    int connectionTimeout //= config.connectionTimeout
 
     /**
-     * Retrieve Jsch Ssh portion of the Configuration.
-
-    public ConfigObject getConfig() {
-        return new BaseJschConfig()
-    }
+     * defaultFilePermission
      */
-
-    public Session fetchSession() throws JSchException {
-        try {
-            log.debug("Opening connection on remote server.")
-            JSch jSch = new JSch()
-            // session object used once connected
-            Session session
-
-            // if the hosts file variable has been set then attempt
-            // to load into JSch object.
-            if (knownHostsFile) {
-                log.trace("Adding known hosts file to client.")
-                jSch.setKnownHosts(knownHostsFile)
-            }
-
-            // If the config file is set attempt to load it
-            if (sshConfigFile) {
-                log.trace("Loading ssh config file")
-                ConfigRepository configRepository = com.jcraft.jsch.OpenSSHConfig.parse(sshConfigFile)
-                jSch.setConfigRepository(configRepository)
-            }
-
-            // If keyFile is set and password is not attempt to use the key to auth
-            if (keyFile && !password) {
-                log.trace("Attempting an ssh key auth.")
-                if (keyFilePassword) {
-                    log.trace("Adding ${keyFile}, and keyFilePassword to identity.")
-                    jSch.addIdentity(keyFile, keyFilePassword)
-                }
-                else {
-                    log.trace("Adding ${keyFile} to identity.")
-                    jSch.addIdentity(keyFile)
-                }
-            }
-            log.trace("Opening session to remote host.")
-            session = jSch.getSession(username, host, port)
-            // If the connectionTimeout is set use it instead of jsch default.
-            if (connectionTimeout) {
-                session.timeout = connectionTimeout
-            }
-
-            if (password) {
-                // If this is not set maybe its a key auth?
-                session.setPassword(password)
-            }
-
-//            session.setConfig("StrictHostKeyChecking","no")
-            session.setConfig("StrictHostKeyChecking", strictHostKeyChecking)
-
-            // Connect to the server to run the command.
-            session.connect()
-            log.trace("connected to server.")
-            return session
-        }
-        catch (JSchException e) {
-            log.debug("Failed to create session to host.")
-            throw e
-        }
-    }
+    String defaultFilePermission
 
     /**
      * Runs a passed closure to implement builder-style operation.
@@ -228,8 +153,7 @@ public class ConnectionInfo implements InitializingBean{
     @Override
     void afterPropertiesSet() throws Exception {
 
-        //CHange this
-        assert this.port != 22 , "Fail MOFO FAIL"
+        assert this.port != null , "SSH Port must not be null"
 
     }
 }

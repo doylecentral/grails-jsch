@@ -1,1 +1,11 @@
 #defaults.
+username : "root"
+password : null
+keyFile : null
+keyFilePassword : null
+sshport: 22
+strictHostKeyChecking : "no"
+knownHostsFile : "~/.ssh/known_hosts"
+sshConfigFile : "~/.ssh/config"
+connectionTimeout : 0
+defaultFilePermission : "0644"
